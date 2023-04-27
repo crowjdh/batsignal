@@ -19,7 +19,6 @@
 #include <dirent.h>
 #include <err.h>
 #include <errno.h>
-#include <libnotify/notify.h>
 #include <math.h>
 #include <signal.h>
 #include <stdio.h>
@@ -49,7 +48,6 @@
 static char daemonize = 0;
 static char run_once = 0;
 static char battery_required = 1;
-static char show_notifications = 1;
 static char battery_name_specified = 0;
 
 /* battery information */
@@ -84,15 +82,6 @@ static char *dangercmd = "";
 static char *msgcmd = "";
 static char *msgcmdbuf;
 
-/* app name for notification */
-static char *appname = PROGNAME;
-
-/* specify the icon used in notifications */
-static char *icon = NULL;
-
-/* specify when the notification should expire */
-static int notification_expires = NOTIFY_EXPIRES_NEVER;
-
 void print_version()
 {
   printf("%s %s\n", PROGNAME, VERSION);
@@ -110,8 +99,6 @@ Options:\n\
     -b             run as background daemon\n\
     -o             check battery once and exit\n\
     -i             ignore missing battery errors\n\
-    -e             cause notifications to expire\n\
-    -N             disable desktop notifications\n\
     -w LEVEL       battery warning LEVEL\n\
                    (default: 15)\n\
     -c LEVEL       critical battery LEVEL\n\
@@ -136,9 +123,8 @@ Options:\n\
 ", PROGNAME, PROGNAME);
 }
 
-void notify(char *msg, NotifyUrgency urgency)
+void notify(char *msg)
 {
-  char body[20];
   char level[8];
   size_t needed;
 
@@ -150,17 +136,6 @@ void notify(char *msg, NotifyUrgency urgency)
       err(EXIT_FAILURE, "Memory allocation failed");
     sprintf(msgcmdbuf, msgcmd, msg, level);
     if (system(msgcmdbuf) == -1) { /* Ignore command errors... */ }
-  }
-
-  if (show_notifications && msg[0] != '\0' && notify_init(appname)) {
-    sprintf(body, "Battery level: %u%%", battery_level);
-
-    NotifyNotification *notification = notify_notification_new(msg, body, icon);
-    notify_notification_set_urgency(notification, urgency);
-    notify_notification_set_timeout(notification, notification_expires);
-    notify_notification_show(notification, NULL);
-    g_object_unref(notification);
-    notify_uninit();
   }
 }
 
@@ -312,23 +287,11 @@ void parse_args(int argc, char *argv[])
       case 'f':
         full = strtoul(optarg, NULL, 10);
         break;
-      case 'W':
-        warningmsg = optarg;
-        break;
-      case 'C':
-        criticalmsg = optarg;
-        break;
       case 'D':
         dangercmd = optarg;
         break;
-      case 'F':
-        fullmsg = optarg;
-        break;
       case 'M':
         msgcmd = optarg;
-        break;
-      case 'N':
-        show_notifications = 0;
         break;
       case 'n':
         battery_name_specified = 1;
@@ -336,15 +299,6 @@ void parse_args(int argc, char *argv[])
         break;
       case 'm':
         multiplier = strtoul(optarg, NULL, 10);
-        break;
-      case 'a':
-        appname = optarg;
-        break;
-      case 'I':
-        icon = optarg;
-        break;
-      case 'e':
-        notification_expires = NOTIFY_EXPIRES_DEFAULT;
         break;
       case '?':
         errx(EXIT_FAILURE, "Unknown option `-%c'.", optopt);
@@ -473,9 +427,7 @@ void find_batteries()
 
 void cleanup()
 {
-  if (notify_is_initted()) {
-    notify_uninit();
-  }
+  // no-op
 }
 
 void signal_handler()
@@ -524,7 +476,7 @@ int main(int argc, char *argv[])
       } else if (critical && battery_level <= critical) {
         if (battery_state != STATE_CRITICAL) {
           battery_state = STATE_CRITICAL;
-          notify(criticalmsg, NOTIFY_URGENCY_CRITICAL);
+          notify(criticalmsg);
         }
 
       } else if (warning && battery_level <= warning) {
@@ -533,7 +485,7 @@ int main(int argc, char *argv[])
 
         if (battery_state != STATE_WARNING) {
           battery_state = STATE_WARNING;
-          notify(warningmsg, NOTIFY_URGENCY_NORMAL);
+          notify(warningmsg);
         }
 
       } else {
@@ -549,7 +501,7 @@ int main(int argc, char *argv[])
       if (full && battery_state != STATE_FULL) {
         if (battery_level >= full || battery_full) {
           battery_state = STATE_FULL;
-          notify(fullmsg, NOTIFY_URGENCY_NORMAL);
+          notify(fullmsg);
         }
       }
     }

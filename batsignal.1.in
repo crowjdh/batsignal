@@ -24,12 +24,6 @@ Check battery once and exit
 .B \-i
 Ignore missing battery errors
 .TP
-.B \-e
-Cause notifications to expire
-.TP
-.B \-N
-Disable desktop notifications
-.TP
 .B \-w LEVEL
 Battery warning LEVEL (default 15). 0 disables this level
 .TP
@@ -42,17 +36,8 @@ Battery danger LEVEL (default 2). 0 disables this level
 .B \-f LEVEL
 Battery full LEVEL (default 0). 0 disables this level
 .TP
-.B \-W MESSAGE
-Show MESSAGE when battery is at warning level
-.TP
-.B \-C MESSAGE
-Show MESSAGE when battery is at critical level
-.TP
 .B \-D COMMAND
 Run COMMAND when battery is at danger level
-.TP
-.B \-F MESSAGE
-Show MESSAGE when battery is at full level
 .TP
 .B \-M COMMAND
 Send each message using COMMAND
@@ -62,12 +47,6 @@ Battery device NAME - multiple batteries may be separated by commas (default BAT
 .TP
 .B \-m SECONDS
 Minimum number of SECONDS (default 60) to wait between battery checks. Settings SECONDS to 0 disables polling and waits for the USR1 signal before checking battery level.
-.TP
-.B \-a APP_NAME
-App name used in notifications (default: batsignal)
-.TP
-.B \-I ICON
-Display specified ICON in notifications
 .SH SIGNALS
 batsignal responds to the following signals:
 .TP

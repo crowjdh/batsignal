@@ -22,11 +22,11 @@ MANPREFIX./usr/local=/usr/local/man
 MANPREFIX.=/usr/share/man
 MANPREFIX=$(MANPREFIX.$(PREFIX))
 
-INCLUDES != pkg-config --cflags libnotify
+INCLUDES != pkg-config
 CFLAGS_EXTRA = -pedantic -Wall -Wextra -Werror -Wno-unused-parameter -Os
 CFLAGS := $(CFLAGS_EXTRA) $(INCLUDES) $(CFLAGS)
 
-LIBS != pkg-config --libs libnotify
+LIBS != pkg-config
 LIBS := $(LIBS) -lm
 LDFLAGS_EXTRA = -s
 LDFLAGS := $(LDFLAGS_EXTRA) $(LDFLAGS)
