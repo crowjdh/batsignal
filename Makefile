@@ -49,14 +49,14 @@ install: all
 	$(INSTALL) -m 0644 $(NAME).1 $(DESTDIR)$(MANPREFIX)/man1/
 
 install-service: install
-	$(INSTALL) -d $(DESTDIR)$(PREFIX)/lib/systemd/user
-	$(INSTALL) -m 0644 $(NAME).service $(DESTDIR)$(PREFIX)/lib/systemd/user/
+	$(INSTALL) -d $(DESTDIR)$(PREFIX)/lib/systemd/system
+	$(INSTALL) -m 0644 $(NAME).service $(DESTDIR)$(PREFIX)/lib/systemd/system/
 
 uninstall:
 	@echo Removing files from $(DESTDIR)$(PREFIX)
 	$(RM) $(DESTDIR)$(PREFIX)/bin/$(NAME)
 	$(RM) $(DESTDIR)$(MANPREFIX)/man1/$(NAME).1
-	$(RM) $(DESTDIR)$(PREFIX)/lib/systemd/user/$(NAME).service
+	$(RM) $(DESTDIR)$(PREFIX)/lib/systemd/system/$(NAME).service
 
 clean-all: clean clean-images
 
