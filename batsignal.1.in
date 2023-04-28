@@ -36,11 +36,17 @@ Battery danger LEVEL (default 2). 0 disables this level
 .B \-f LEVEL
 Battery full LEVEL (default 0). 0 disables this level
 .TP
+.B \-W COMMAND
+Run COMMAND when battery is at warning level
+.TP
+.B \-C COMMAND
+Run COMMAND when battery is at critical level
+.TP
 .B \-D COMMAND
 Run COMMAND when battery is at danger level
 .TP
-.B \-M COMMAND
-Send each message using COMMAND
+.B \-F COMMAND
+Run COMMAND when battery is full
 .TP
 .B \-n NAME
 Battery device NAME - multiple batteries may be separated by commas (default BAT0)

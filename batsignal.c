@@ -70,17 +70,11 @@ static int critical = 5;
 static int danger = 2;
 static int full = 0;
 
-/* messages for battery levels */
-static char *warningmsg = "Battery is low";
-static char *criticalmsg = "Battery is critically low";
-static char *fullmsg = "Battery is full";
-
 /* run this system command if battery reaches danger level */
 static char *dangercmd = "";
-
-/* run this system command to display a message */
-static char *msgcmd = "";
-static char *msgcmdbuf;
+static char *warningcmd = "";
+static char *criticalcmd = "";
+static char *fullcmd = "";
 
 void print_version()
 {
@@ -107,35 +101,24 @@ Options:\n\
                    (default: 2)\n\
     -f LEVEL       full battery LEVEL\n\
                    (default: disabled)\n\
-    -W MESSAGE     show MESSAGE when battery is at warning level\n\
-    -C MESSAGE     show MESSAGE when battery is at critical level\n\
+    -W COMMAND     run COMMAND when battery is at warning level\n\
+    -C COMMAND     run COMMAND when battery is at critical level\n\
     -D COMMAND     run COMMAND when battery is at danger level\n\
-    -F MESSAGE     show MESSAGE when battery is full\n\
-    -M COMMAND     send each message using COMMAND\n\
+    -F COMMAND     run COMMAND when battery is full\n\
     -n NAME        use battery NAME - multiple batteries separated by commas\n\
                    (default: BAT0)\n\
     -m SECONDS     minimum number of SECONDS to wait between battery checks\n\
                    0 SECONDS disables polling and waits for USR1 signal\n\
                    (default: 60)\n\
-    -a NAME        app NAME used in desktop notifications\n\
-                   (default: %s)\n\
-    -I ICON        display specified ICON in notifications\n\
-", PROGNAME, PROGNAME);
+", PROGNAME);
 }
 
-void notify(char *msg)
+void notify(char *cmd)
 {
-  char level[8];
-  size_t needed;
-
-  if (msgcmd[0] != '\0') {
-    snprintf(level, 8, "%d", battery_level);
-    needed = snprintf(NULL, 0, msgcmd, msg, level);
-    msgcmdbuf = realloc(msgcmdbuf, needed + 1);
-    if (msgcmdbuf == NULL)
-      err(EXIT_FAILURE, "Memory allocation failed");
-    sprintf(msgcmdbuf, msgcmd, msg, level);
-    if (system(msgcmdbuf) == -1) { /* Ignore command errors... */ }
+  if (cmd[0] != '\0') {
+    if (system(cmd) == -1) {
+      /* no-op */
+    }
   }
 }
 
@@ -258,7 +241,7 @@ void parse_args(int argc, char *argv[])
 {
   signed int c;
 
-  while ((c = getopt(argc, argv, "-:hvboiew:c:d:f:W:C:D:F:M:Nn:m:a:I:")) != -1) {
+  while ((c = getopt(argc, argv, "-:hvboiw:c:d:f:W:C:D:F:n:m:")) != -1) {
     switch (c) {
       case 'h':
         print_help();
@@ -287,11 +270,17 @@ void parse_args(int argc, char *argv[])
       case 'f':
         full = strtoul(optarg, NULL, 10);
         break;
+      case 'W':
+        warningcmd = optarg;
+        break;
+      case 'C':
+        criticalcmd = optarg;
+        break;
       case 'D':
         dangercmd = optarg;
         break;
-      case 'M':
-        msgcmd = optarg;
+      case 'F':
+        fullcmd = optarg;
         break;
       case 'n':
         battery_name_specified = 1;
@@ -469,14 +458,13 @@ int main(int argc, char *argv[])
       if (danger && battery_level <= danger) {
         if (battery_state != STATE_DANGER) {
           battery_state = STATE_DANGER;
-          if (dangercmd[0] != '\0')
-            if (system(dangercmd) == -1) { /* Ignore command errors... */ }
+          notify(dangercmd);
         }
 
       } else if (critical && battery_level <= critical) {
         if (battery_state != STATE_CRITICAL) {
           battery_state = STATE_CRITICAL;
-          notify(criticalmsg);
+          notify(criticalcmd);
         }
 
       } else if (warning && battery_level <= warning) {
@@ -485,7 +473,7 @@ int main(int argc, char *argv[])
 
         if (battery_state != STATE_WARNING) {
           battery_state = STATE_WARNING;
-          notify(warningmsg);
+          notify(warningcmd);
         }
 
       } else {
@@ -501,7 +489,7 @@ int main(int argc, char *argv[])
       if (full && battery_state != STATE_FULL) {
         if (battery_level >= full || battery_full) {
           battery_state = STATE_FULL;
-          notify(fullmsg);
+          notify(fullcmd);
         }
       }
     }
